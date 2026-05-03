@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Handstand Pom Projects</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --brand:   #1a1a1a;
+      --accent:  #c8963e;
+      --bg:      #f7f4ef;
+      --card-bg: #ffffff;
+      --text:    #2c2c2c;
+      --muted:   #888;
+      --border:  #e4dfd6;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* Header */
+    header { background: var(--brand); color: #fff; padding: 2.5rem 2rem 2rem; text-align: center; }
+    header h1 { font-family: 'Cormorant Garamond', serif; font-size: clamp(2rem,5vw,3.5rem); font-weight: 600; letter-spacing: .04em; }
+    header p  { margin-top: .5rem; font-size: .9rem; font-weight: 300; color: rgba(255,255,255,.6); letter-spacing: .12em; text-transform: uppercase; }
+    .order-note { display: inline-block; margin-top: 1.2rem; padding: .5rem 1.2rem; border: 1px solid var(--accent); border-radius: 2px; color: var(--accent); font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; }
+
+    /* Controls */
+    .controls { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; padding: 1.25rem 2rem; background: var(--card-bg); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+    .search-wrap { flex: 1; min-width: 180px; position: relative; }
+    .search-wrap input { width: 100%; padding: .55rem .9rem .55rem 2.2rem; border: 1px solid var(--border); border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: .88rem; background: var(--bg); color: var(--text); outline: none; transition: border-color .2s; }
+    .search-wrap input:focus { border-color: var(--accent); }
+    .search-wrap svg { position: absolute; left: .65rem; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; stroke: var(--muted); fill: none; }
+    .filters { display: flex; flex-wrap: wrap; gap: .4rem; }
+    .filter-btn { padding: .45rem 1rem; border: 1px solid var(--border); border-radius: 2px; background: transparent; font-family: 'DM Sans', sans-serif; font-size: .8rem; letter-spacing: .05em; cursor: pointer; color: var(--muted); transition: all .2s; }
+    .filter-btn:hover  { border-color: var(--accent); color: var(--accent); }
+    .filter-btn.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+    .result-count { font-size: .8rem; color: var(--muted); white-space: nowrap; margin-left: auto; }
+
+    /* Grid */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 1.5rem; padding: 2rem; max-width: 1400px; margin: 0 auto; }
+
+    /* Card */
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 3px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: box-shadow .25s, transform .25s; animation: fadeUp .4s ease both; }
+    .card:hover { box-shadow: 0 8px 28px rgba(0,0,0,.10); transform: translateY(-3px); }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+
+    /* Card carousel */
+    .card-img { aspect-ratio: 1/1; overflow: hidden; background: var(--bg); position: relative; }
+    .card-img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s ease; }
+    .card:hover .card-img img { transform: scale(1.04); }
+    .carousel-dots { position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; }
+    .carousel-dots span { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,.6); transition: background .2s; }
+    .carousel-dots span.active { background: #fff; }
+
+    .card-body { padding: 1rem 1rem 1.2rem; flex: 1; display: flex; flex-direction: column; gap: .35rem; }
+    .card-tag  { font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); font-weight: 500; }
+    .card-name { font-family: 'Cormorant Garamond', serif; font-size: 1.15rem; font-weight: 600; line-height: 1.25; }
+    .card-desc { font-size: .8rem; color: var(--muted); line-height: 1.5; flex: 1; }
+    .card-price { margin-top: .6rem; font-size: 1rem; font-weight: 500; color: var(--brand); }
+    .multi-badge { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,.55); color: #fff; font-size: .65rem; padding: 2px 7px; border-radius: 10px; letter-spacing: .05em; }
+
+    /* Lightbox */
+    .lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 100; align-items: center; justify-content: center; padding: 1rem; }
+    .lightbox.open { display: flex; }
+    .lightbox-inner { background: var(--card-bg); border-radius: 3px; max-width: 920px; width: 100%; display: flex; overflow: hidden; max-height: 92vh; animation: popIn .2s ease; }
+    @keyframes popIn { from { opacity:0; transform:scale(.96); } to { opacity:1; transform:scale(1); } }
+
+    /* Lightbox image carousel */
+    .lb-gallery { flex: 0 0 55%; background: var(--bg); display: flex; flex-direction: column; }
+    .lb-main-img { flex: 1; overflow: hidden; position: relative; }
+    .lb-main-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .lb-thumbs { display: flex; gap: 6px; padding: 8px; overflow-x: auto; background: #f0ece5; }
+    .lb-thumb { width: 52px; height: 52px; object-fit: cover; border-radius: 2px; cursor: pointer; opacity: .55; border: 2px solid transparent; transition: all .2s; flex-shrink: 0; }
+    .lb-thumb.active { opacity: 1; border-color: var(--accent); }
+    .lb-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,.4); color: #fff; border: none; font-size: 1.2rem; padding: .4rem .7rem; cursor: pointer; border-radius: 2px; transition: background .2s; }
+    .lb-nav:hover { background: rgba(0,0,0,.7); }
+    .lb-prev { left: 8px; }
+    .lb-next { right: 8px; }
+
+    /* Lightbox info */
+    .lb-info { flex: 1; padding: 2rem 1.8rem; display: flex; flex-direction: column; gap: .7rem; overflow-y: auto; }
+    .lb-tag   { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+    .lb-name  { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 600; line-height: 1.2; }
+    .lb-desc  { font-size: .88rem; color: var(--muted); line-height: 1.6; }
+    .lb-price { font-size: 1.5rem; font-weight: 500; color: var(--brand); }
+
+    /* Options dropdown */
+    .lb-options-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-top: .3rem; }
+    .lb-options select { width: 100%; padding: .55rem .8rem; border: 1px solid var(--border); border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: .88rem; background: var(--bg); color: var(--text); margin-top: .3rem; cursor: pointer; outline: none; }
+    .lb-options select:focus { border-color: var(--accent); }
+
+    /* Specs */
+    .lb-specs { margin-top: .4rem; }
+    .lb-specs-toggle { background: none; border: none; font-family: 'DM Sans', sans-serif; font-size: .78rem; color: var(--accent); cursor: pointer; padding: 0; letter-spacing: .05em; }
+    .lb-specs-body { font-size: .8rem; color: var(--muted); line-height: 1.8; margin-top: .4rem; display: none; }
+    .lb-specs-body.open { display: block; }
+
+    .lb-note { font-size: .78rem; color: var(--muted); padding-top: .5rem; border-top: 1px solid var(--border); margin-top: auto; }
+    .lightbox-close { position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #fff; font-size: 1.8rem; cursor: pointer; opacity: .7; transition: opacity .2s; line-height: 1; }
+    .lightbox-close:hover { opacity: 1; }
+
+    /* Empty */
+    .empty { grid-column: 1/-1; text-align: center; padding: 5rem 2rem; color: var(--muted); }
+    .empty svg { width: 48px; opacity: .3; margin-bottom: 1rem; }
+
+    footer { text-align: center; padding: 2.5rem 1rem; font-size: .8rem; color: var(--muted); border-top: 1px solid var(--border); margin-top: 2rem; }
+
+    @media (max-width: 620px) {
+      .lightbox-inner { flex-direction: column; }
+      .lb-gallery { flex: 0 0 260px; }
+      .grid { padding: 1rem; gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Handstand Pom Projects</h1>
+  <p>Handcrafted · Climbing-Inspired</p>
+  <div class="order-note">To order, DM us on Instagram @handstand_pom_projects</div>
+</header>
+
+<div class="controls">
+  <div class="search-wrap">
+    <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="searchInput" placeholder="Search products…"/>
+  </div>
+  <div class="filters" id="filterBar">
+    <button class="filter-btn active" data-cat="all">All</button>
+  </div>
+  <span class="result-count" id="resultCount"></span>
+</div>
+
+<main class="grid" id="grid"></main>
+
+<footer>For orders &amp; inquiries: DM <strong>@handstand_pom_projects</strong> on Instagram</footer>
+
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lbClose">&#215;</button>
+  <div class="lightbox-inner">
+    <div class="lb-gallery">
+      <div class="lb-main-img">
+        <img id="lbMainImg" src="" alt=""/>
+        <button class="lb-nav lb-prev" id="lbPrev">&#8249;</button>
+        <button class="lb-nav lb-next" id="lbNext">&#8250;</button>
+      </div>
+      <div class="lb-thumbs" id="lbThumbs"></div>
+    </div>
+    <div class="lb-info">
+      <div class="lb-tag"   id="lbTag"></div>
+      <div class="lb-name"  id="lbName"></div>
+      <div class="lb-desc"  id="lbDesc"></div>
+      <div class="lb-price" id="lbPrice"></div>
+      <div class="lb-options" id="lbOptions"></div>
+      <div class="lb-specs"  id="lbSpecs"></div>
+      <div class="lb-note">Ordering is handled separately — DM us on Instagram to place an order.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════
+   EDIT SECTION 1 — Your products
+   ════════════════════════════════════════════════════════
+   Fields:
+     name, price, category  — required
+     images   — array of image paths (carousel if multiple)
+     img      — first image (auto-set to images[0])
+     desc     — short description
+     options  — comma-separated list shown as dropdown
+     specs    — pipe-separated key:value pairs
+     sku      — internal reference (not shown publicly)
+
+   Filename convention for auto-publishing:
+     ProductName_Price_Category.jpg
+     ProductName_Price_Category_2.jpg  ← second photo
+   ════════════════════════════════════════════════════════ */
+
+const PRODUCTS = [
+  {
+    name:     "Cork Case — Rainbow Holds",
+    price:    "$45",
+    category: "Phone Cases",
+    images:   ["images/a_close_up_well_lit_product_photo_scene_on_a_wood_1_batch_1.png"],
+    img:      "images/a_close_up_well_lit_product_photo_scene_on_a_wood_1_batch_1.png",
+    options:  "iPhone 15 Pro, iPhone 15, iPhone 14 Pro, iPhone 14, iPhone 13",
+    specs:    "Holds: 8 | Material: Cork + polymer clay | Ships: 3-5 days",
+    desc:     "Handcrafted climbing hold case on real cork backing. Each one is unique.",
+    sku:      ""
+  },
+  {
+    name:     "Cork Case — Blue Holds",
+    price:    "$45",
+    category: "Phone Cases",
+    images:   ["images/a_close_up_indoor_photo_of_a_hand_held_product_sce_2_batch_2.png"],
+    img:      "images/a_close_up_indoor_photo_of_a_hand_held_product_sce_2_batch_2.png",
+    options:  "iPhone 15 Pro, iPhone 15, iPhone 14 Pro, iPhone 14, iPhone 13",
+    specs:    "Holds: 8 | Material: Cork + polymer clay | Ships: 3-5 days",
+    desc:     "All blue tones for the monochrome climber.",
+    sku:      ""
+  },
+  {
+    name:     "FRAKTA Chalk Bag",
+    price:    "$35",
+    category: "Chalk Bags",
+    images:   [
+      "images/1173.JPG",
+      "images/1174.JPG",
+      "images/1175.JPG",
+      "images/1164.JPG"
+    ],
+    img:      "images/1173.JPG",
+    options:  "",
+    specs:    "Material: Upcycled IKEA FRAKTA | Belt included | Fleece lined",
+    desc:     "Upcycled IKEA FRAKTA bag transformed into a functional chalk bag. One of a kind.",
+    sku:      ""
+  },
+  /* ── add more products below this line ── */
+];
+
+/* ════════════════════════════════════════════════════════
+   No editing needed below here
+   ════════════════════════════════════════════════════════ */
+
+const grid        = document.getElementById("grid");
+const filterBar   = document.getElementById("filterBar");
+const searchInput = document.getElementById("searchInput");
+const resultCount = document.getElementById("resultCount");
+const lightbox    = document.getElementById("lightbox");
+const lbClose     = document.getElementById("lbClose");
+const lbMainImg   = document.getElementById("lbMainImg");
+const lbThumbs    = document.getElementById("lbThumbs");
+const lbPrev      = document.getElementById("lbPrev");
+const lbNext      = document.getElementById("lbNext");
+
+let lbImages = [];
+let lbIndex  = 0;
+
+// Build category filter buttons
+const cats = [...new Set(PRODUCTS.map(p => p.category))].sort();
+cats.forEach(cat => {
+  const btn = document.createElement("button");
+  btn.className   = "filter-btn";
+  btn.dataset.cat = cat;
+  btn.textContent = cat;
+  filterBar.appendChild(btn);
+});
+
+let activeCategory = "all";
+
+function render() {
+  const q = searchInput.value.trim().toLowerCase();
+  const filtered = PRODUCTS.filter(p => {
+    const matchCat  = activeCategory === "all" || p.category === activeCategory;
+    const matchText = !q || p.name.toLowerCase().includes(q) || (p.desc||"").toLowerCase().includes(q);
+    return matchCat && matchText;
+  });
+
+  grid.innerHTML = "";
+  resultCount.textContent = `${filtered.length} item${filtered.length !== 1 ? "s" : ""}`;
+
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><p>No products match your search.</p></div>`;
+    return;
+  }
+
+  filtered.forEach((p, i) => {
+    const imgs   = p.images || [p.img];
+    const multi  = imgs.length > 1;
+    const card   = document.createElement("div");
+    card.className = "card";
+    card.style.animationDelay = `${i * 40}ms`;
+
+    const dots = multi
+      ? `<div class="carousel-dots">${imgs.map((_,j) => `<span class="${j===0?"active":""}"></span>`).join("")}</div>`
+      : "";
+
+    card.innerHTML = `
+      <div class="card-img">
+        <img src="${imgs[0]}" alt="${p.name}" loading="lazy"
+             onerror="this.style.opacity=0.2"/>
+        ${multi ? `<div class="multi-badge">${imgs.length} photos</div>` : ""}
+        ${dots}
+      </div>
+      <div class="card-body">
+        <div class="card-tag">${p.category}</div>
+        <div class="card-name">${p.name}</div>
+        ${p.desc ? `<div class="card-desc">${p.desc}</div>` : ""}
+        ${p.price ? `<div class="card-price">${p.price}</div>` : ""}
+      </div>`;
+
+    // Hover carousel cycle
+    if (multi) {
+      let hoverIdx = 0, hoverTimer;
+      const img  = card.querySelector("img");
+      const dots = card.querySelectorAll(".carousel-dots span");
+      card.addEventListener("mouseenter", () => {
+        hoverTimer = setInterval(() => {
+          hoverIdx = (hoverIdx + 1) % imgs.length;
+          img.src = imgs[hoverIdx];
+          dots.forEach((d,j) => d.classList.toggle("active", j === hoverIdx));
+        }, 900);
+      });
+      card.addEventListener("mouseleave", () => {
+        clearInterval(hoverTimer);
+        hoverIdx = 0;
+        img.src = imgs[0];
+        dots.forEach((d,j) => d.classList.toggle("active", j === 0));
+      });
+    }
+
+    card.addEventListener("click", () => openLightbox(p));
+    grid.appendChild(card);
+  });
+}
+
+function setLbImage(idx) {
+  lbIndex = (idx + lbImages.length) % lbImages.length;
+  lbMainImg.src = lbImages[lbIndex];
+  lbThumbs.querySelectorAll(".lb-thumb").forEach((t,j) =>
+    t.classList.toggle("active", j === lbIndex));
+}
+
+function openLightbox(p) {
+  lbImages = p.images || [p.img];
+  lbIndex  = 0;
+
+  document.getElementById("lbTag").textContent   = p.category;
+  document.getElementById("lbName").textContent  = p.name;
+  document.getElementById("lbDesc").textContent  = p.desc || "";
+  document.getElementById("lbPrice").textContent = p.price || "";
+
+  // Thumbnails
+  lbThumbs.innerHTML = "";
+  if (lbImages.length > 1) {
+    lbImages.forEach((src, i) => {
+      const t = document.createElement("img");
+      t.src = src; t.alt = ""; t.className = "lb-thumb" + (i===0?" active":"");
+      t.addEventListener("click", () => setLbImage(i));
+      lbThumbs.appendChild(t);
+    });
+    lbPrev.style.display = "block";
+    lbNext.style.display = "block";
+  } else {
+    lbPrev.style.display = "none";
+    lbNext.style.display = "none";
+  }
+  lbMainImg.src = lbImages[0];
+
+  // Options
+  const optsEl = document.getElementById("lbOptions");
+  optsEl.innerHTML = "";
+  if (p.options) {
+    const opts = p.options.split(",").map(o => o.trim()).filter(Boolean);
+    if (opts.length) {
+      optsEl.innerHTML = `
+        <div class="lb-options-label">Select option</div>
+        <select>
+          <option value="">— Choose —</option>
+          ${opts.map(o => `<option>${o}</option>`).join("")}
+        </select>`;
+    }
+  }
+
+  // Specs
+  const specsEl = document.getElementById("lbSpecs");
+  specsEl.innerHTML = "";
+  if (p.specs) {
+    const lines = p.specs.split("|").map(s => s.trim()).filter(Boolean);
+    specsEl.innerHTML = `
+      <button class="lb-specs-toggle" onclick="this.nextElementSibling.classList.toggle('open');this.textContent=this.textContent.includes('▸')?'▾ Hide specs':'▸ Show specs'">▸ Show specs</button>
+      <div class="lb-specs-body">${lines.join("<br>")}</div>`;
+  }
+
+  lightbox.classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+
+function closeLightbox() {
+  lightbox.classList.remove("open");
+  document.body.style.overflow = "";
+}
+
+lbPrev.addEventListener("click", e => { e.stopPropagation(); setLbImage(lbIndex - 1); });
+lbNext.addEventListener("click", e => { e.stopPropagation(); setLbImage(lbIndex + 1); });
+lbClose.addEventListener("click", closeLightbox);
+lightbox.addEventListener("click", e => { if (e.target === lightbox) closeLightbox(); });
+document.addEventListener("keydown", e => {
+  if (!lightbox.classList.contains("open")) return;
+  if (e.key === "Escape")    closeLightbox();
+  if (e.key === "ArrowLeft") setLbImage(lbIndex - 1);
+  if (e.key === "ArrowRight")setLbImage(lbIndex + 1);
+});
+
+filterBar.addEventListener("click", e => {
+  const btn = e.target.closest(".filter-btn");
+  if (!btn) return;
+  filterBar.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  activeCategory = btn.dataset.cat;
+  render();
+});
+
+searchInput.addEventListener("input", render);
+render();
+</script>
+</body>
+</html>
